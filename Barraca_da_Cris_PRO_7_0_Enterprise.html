@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Barraca da Cris PRO 7.0 Enterprise</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0f172a;color:white;font-family:Arial;padding:10px;padding-bottom:120px}.app{max-width:560px;margin:auto}.box,.tela,.top{background:#1e293b;border-radius:18px;padding:15px;margin-bottom:12px;box-shadow:0 3px 12px #0005}.tela{display:none}.ativa{display:block}h1{margin:0;color:#60a5fa}input,select,textarea{width:100%;padding:13px;border-radius:12px;border:1px solid #334155;background:#111827;color:white;font-size:16px;margin-bottom:9px}textarea{height:55px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn,.prod{border:0;border-radius:13px;padding:14px;font-weight:bold;font-size:15px}.azul{background:#2563eb;color:white}.verde{background:#16a34a;color:white}.laranja{background:#f59e0b;color:white}.vermelho{background:#ef4444;color:white}.roxo{background:#7c3aed;color:white}.cinza{background:#475569;color:white}.prod{background:#2563eb;color:white;min-height:75px}.cat{background:#2563eb;border-radius:12px;padding:12px;font-size:20px;font-weight:bold;margin:18px 0 10px}.item,.card{border:1px solid #334155;border-radius:12px;padding:10px;margin:8px 0;background:#111827}.total{text-align:right;font-size:24px;font-weight:bold}.nav{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);max-width:560px;width:calc(100% - 16px);display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:#020617;border-radius:18px;padding:7px}.nav button{background:transparent;color:white;border:0;border-radius:12px;padding:8px;font-size:11px}.nav button span{display:block;font-size:20px}.badge{padding:4px 8px;border-radius:999px;color:white;font-size:12px}.tabela{width:100%;border-collapse:collapse;font-size:14px}.tabela th,.tabela td{border-bottom:1px solid #334155;padding:7px 4px;text-align:left}.tabela td:last-child,.tabela th:last-child{text-align:right}.preparo{background:#f59e0b}.pronto{background:#16a34a}.entregue{background:#2563eb}.cancelado{background:#ef4444}#toast{display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#020617;padding:12px;border-radius:12px}.modalbg{display:none;position:fixed;inset:0;background:#0009;z-index:60;padding:18px}.modal{max-width:560px;margin:40px auto;background:#1e293b;color:white;border-radius:18px;padding:16px;max-height:88vh;overflow:auto}#cupom{display:none}@media print{@page{size:58mm auto;margin:0}body{background:white;color:black;padding:0}.app,.nav,#toast{display:none!important}#cupom{display:block!important;width:56mm;padding:1mm;font-family:monospace;font-size:10px;color:#000}.linha{border-top:1px dashed #000;margin:4px 0}.centro{text-align:center}.row{display:flex;justify-content:space-between}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><h1>Barraca da Cris</h1><small id="sub">PRO 7.0 • Enterprise</small></div>
+
+<section id="login" class="tela ativa">
+<h2>Entrar</h2>
+<select id="perfil"><option value="atendimento">Atendimento</option><option value="cozinha">Cozinha</option><option value="caixa">Caixa</option><option value="adm">ADM</option></select>
+<input id="senha" type="password" placeholder="Senha">
+<button class="btn azul" style="width:100%" onclick="entrar()">Entrar</button>
+<div class="box"><b>Segurança:</b><br>Após 3 tentativas erradas, o login bloqueia por 60 segundos.<br><small>As senhas podem ser alteradas no ADM.</small></div>
+</section>
+
+<section id="inicio" class="tela"><h2>Início</h2><div id="menu" class="grid"></div><div id="resumo" class="box"></div></section>
+
+<section id="pedido" class="tela"><h2>Novo Pedido</h2>
+<input id="cliente" placeholder="Mesa / Cliente">
+<select id="pagamento"><option>PIX</option><option>Dinheiro</option><option>Cartão Débito</option><option>Cartão Crédito</option></select>
+<input id="valorPago" type="number" step="0.01" placeholder="Valor pago">
+<textarea id="obs" placeholder="Observação"></textarea>
+<input id="busca" placeholder="Pesquisar produto" oninput="renderProdutos()">
+<div id="produtos"></div>
+<div class="box"><h2>Pedido Atual</h2><div id="itens"></div><div class="total" id="total">R$ 0,00</div><div class="grid"><button class="btn verde" onclick="salvarPedido()">Salvar</button><button class="btn laranja" onclick="imprimirAtual()">Imprimir</button><button class="btn verde" onclick="whats()">WhatsApp</button><button class="btn vermelho" onclick="limparPedido()">Limpar</button></div></div>
+</section>
+
+<section id="cozinha" class="tela"><h2>Cozinha</h2><div class="grid"><button class="btn laranja" onclick="filtroCoz='preparo';renderCozinha()">Em preparo</button><button class="btn verde" onclick="filtroCoz='pronto';renderCozinha()">Prontos</button></div><div id="listaCozinha"></div></section>
+
+<section id="caixa" class="tela"><h2>Caixa</h2><div class="grid"><button class="btn laranja" onclick="filtroCx='pronto';renderCaixa()">A receber</button><button class="btn verde" onclick="filtroCx='entregue';renderCaixa()">Entregues</button></div><div id="listaCaixa"></div></section>
+
+<section id="adm" class="tela"><h2>ADM</h2><div class="grid"><button class="btn laranja" onclick="admProdutos()">Produtos</button><button class="btn verde" onclick="admRelatorio()">Relatórios</button><button class="btn azul" onclick="admFinanceiro()">Custos/Lucro</button><button class="btn verde" onclick="admCaixaPro()">Caixa PRO</button><button class="btn laranja" onclick="admEstoque()">Estoque</button><button class="btn azul" onclick="admDashboardPro()">Dashboard</button><button class="btn roxo" onclick="admAuditoria()">Auditoria</button><button class="btn cinza" onclick="admTefReady()">TEF Ready</button><button class="btn azul" onclick="admPedidos()">Corrigir</button><button class="btn roxo" onclick="admBackup()">Backup</button><button class="btn cinza" onclick="admConfig()">Config</button><button class="btn vermelho" onclick="sair()">Sair</button></div><div id="areaAdm" class="box"></div></section>
+</div>
+
+<nav class="nav"><button onclick="abrir('inicio')"><span>🏠</span>Início</button><button onclick="abrir('pedido')"><span>🧾</span>Pedido</button><button onclick="abrir('cozinha')"><span>👨‍🍳</span>Cozinha</button><button onclick="abrir('caixa')"><span>💰</span>Caixa</button><button onclick="abrir('adm')"><span>🔒</span>ADM</button></nav>
+<div id="toast"></div><div id="cupom"></div><input id="file" type="file" accept=".json" style="display:none" onchange="restaurar(event)">
+
+
+<div id="modalEditar" class="modalbg"><div class="modal">
+<h2>Corrigir Pedido</h2>
+<input id="editId" type="hidden">
+<label>Cliente/Mesa</label><input id="editCliente">
+<label>Pagamento</label><select id="editPagamento"><option>PIX</option><option>Dinheiro</option><option>Cartão Débito</option><option>Cartão Crédito</option></select>
+<label>Valor pago</label><input id="editValorPago" type="number" step="0.01">
+<label>Total</label><input id="editTotal" type="number" step="0.01">
+<label>Status</label><select id="editStatus"><option value="preparo">preparo</option><option value="pronto">pronto</option><option value="entregue">entregue</option><option value="cancelado">cancelado</option></select>
+<label>Observação</label><textarea id="editObs"></textarea>
+<div id="editItens"></div>
+<div class="grid"><button class="btn verde" onclick="salvarEdicao()">Salvar correção</button><button class="btn vermelho" onclick="$('modalEditar').style.display='none'">Cancelar</button></div>
+</div></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import{getFirestore,collection,doc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+const firebaseConfig={
+  apiKey:"AIzaSyAG5pASeFhdvetSg017jo0qfAq_PUnYTvc",
+  authDomain:"barraca-da-cris.firebaseapp.com",
+  projectId:"barraca-da-cris",
+  storageBucket:"barraca-da-cris.firebasestorage.app",
+  messagingSenderId:"17815055743",
+  appId:"1:17815055743:web:9555f474c4f6c3e3adfe4a",
+  measurementId:"G-R0XEPR2VB2"
+};
+window.fb=false;if(firebaseConfig.apiKey&&!firebaseConfig.apiKey.includes("COLE_")){try{const app=initializeApp(firebaseConfig);window.db=getFirestore(app);window.fs={collection,doc,setDoc,onSnapshot};window.fb=true}catch(e){console.error(e)}}
+</script>
+
+<script>
+const PAD=[{nome:"☕ Café",preco:2,categoria:"☕ Cafés"},{nome:"☕ Café com Leite",preco:3,categoria:"☕ Cafés"},{nome:"🍰 Bolo Fofo",preco:3,categoria:"🍰 Bolos"},{nome:"🥪 Pão Completo",preco:10,categoria:"🥪 Pães"}];
+let produtos=JSON.parse(localStorage.getItem("produtos_bc")||"null")||PAD,categorias=JSON.parse(localStorage.getItem("cats_bc")||"null")||[...new Set(PAD.map(p=>p.categoria))],historico=JSON.parse(localStorage.getItem("hist_bc")||"[]"),custos=JSON.parse(localStorage.getItem("custos_bc")||"[]"),pedido=[],perfil=sessionStorage.getItem("perfil_bc")||"",filtroCoz="preparo",filtroCx="pronto",unsub=null,unsubCustos=null,syncing=false;
+let senhas=JSON.parse(localStorage.getItem("senhas_bc")||'{"atendimento":"1111","cozinha":"2222","caixa":"3333","adm":"1234"}');
+function $(id){return document.getElementById(id)}function money(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}function norm(t){return String(t||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}function save(){localStorage.setItem("produtos_bc",JSON.stringify(produtos));localStorage.setItem("cats_bc",JSON.stringify(categorias));localStorage.setItem("hist_bc",JSON.stringify(historico))}function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1600)}
+function entrar(){
+  let bloqueio=Number(localStorage.getItem("bloqueio_login_bc")||0);
+  if(Date.now()<bloqueio){alert("Login bloqueado. Aguarde 60 segundos.");return}
+  let p=$("perfil").value,s=$("senha").value,erros=Number(localStorage.getItem("erros_login_bc")||0);
+  if(s===senhas[p]){
+    perfil=p;
+    sessionStorage.setItem("perfil_bc",p);
+    localStorage.setItem("erros_login_bc",0);
+    $("senha").value="";
+    iniciar();
+  }else{
+    erros++;
+    localStorage.setItem("erros_login_bc",erros);
+    if(erros>=3){
+      localStorage.setItem("bloqueio_login_bc",Date.now()+60000);
+      localStorage.setItem("erros_login_bc",0);
+      alert("Muitas tentativas. Login bloqueado por 60 segundos.");
+    }else{
+      alert("Senha incorreta");
+    }
+  }
+}
+function sair(){perfil="";sessionStorage.removeItem("perfil_bc");abrir("login")}
+function pode(t){if(t==="login")return true;if(!perfil)return false;if(perfil==="adm")return true;return perfil===t||t==="inicio"||(perfil==="atendimento"&&t==="pedido")}
+function abrir(t){if(!pode(t)){alert("Sem permissão");return}document.querySelectorAll(".tela").forEach(x=>x.classList.remove("ativa"));$(t).classList.add("ativa");$("sub").textContent="PRO 6.0 • "+(perfil||"login");if(t==="inicio")resumo();if(t==="pedido")renderProdutos();if(t==="cozinha")renderCozinha();if(t==="caixa")renderCaixa()}
+function iniciar(){montarMenu();abrir("inicio");syncStart()}
+function montarMenu(){let h="";if(perfil==="atendimento"||perfil==="adm")h+=`<button class="btn azul" onclick="abrir('pedido')">🧾 Pedido</button>`;if(perfil==="cozinha"||perfil==="adm")h+=`<button class="btn laranja" onclick="abrir('cozinha')">👨‍🍳 Cozinha</button>`;if(perfil==="caixa"||perfil==="adm")h+=`<button class="btn verde" onclick="abrir('caixa')">💰 Caixa</button>`;if(perfil==="adm")h+=`<button class="btn roxo" onclick="abrir('adm')">🔒 ADM</button>`;h+=`<button class="btn vermelho" onclick="sair()">Sair</button>`;$("menu").innerHTML=h}
+function dedup(){let m=new Map();produtos.forEach(p=>m.set(norm(p.nome)+"|"+norm(p.categoria),p));produtos=[...m.values()].sort((a,b)=>norm(a.categoria).localeCompare(norm(b.categoria))||norm(a.nome).localeCompare(norm(b.nome)));categorias=[...new Set([...categorias,...produtos.map(p=>p.categoria)])].sort((a,b)=>norm(a).localeCompare(norm(b)));save()}
+function renderProdutos(){dedup();let b=norm($("busca").value),lista=produtos.filter(p=>norm(p.nome).includes(b)||norm(p.categoria).includes(b));$("produtos").innerHTML="";[...new Set(lista.map(p=>p.categoria))].forEach(c=>{let div=document.createElement("div");div.className="cat";div.textContent=c;$("produtos").appendChild(div);let g=document.createElement("div");g.className="grid";lista.filter(p=>p.categoria===c).forEach(p=>{let bt=document.createElement("button");bt.className="prod";bt.innerHTML=p.nome+"<br>"+money(p.preco);bt.onclick=()=>add(p);g.appendChild(bt)});$("produtos").appendChild(g)})}
+function add(p){let i=pedido.find(x=>norm(x.nome)===norm(p.nome)&&norm(x.categoria)===norm(p.categoria));if(i)i.qtd++;else pedido.push({...p,qtd:1});renderPedido()}
+function renderPedido(){let total=0;$("itens").innerHTML="";pedido.forEach((i,n)=>{total+=i.qtd*i.preco;$("itens").innerHTML+=`<div class="item">${i.qtd}x ${i.nome}<br>${money(i.qtd*i.preco)} <button onclick="pedido.splice(${n},1);renderPedido()">X</button></div>`});$("total").textContent=money(total)}
+function total(){return pedido.reduce((s,i)=>s+i.qtd*i.preco,0)}function num(){let n=Number(localStorage.getItem("num_bc")||0)+1;localStorage.setItem("num_bc",n);return n}
+async function salvarPedido(){if(!pedido.length){alert("Adicione produtos");return}let n=num(),p={id:"p_"+Date.now()+"_"+n,numero:n,data:new Date().toISOString(),cliente:$("cliente").value||"Não informado",pagamento:$("pagamento").value,valorPago:Number($("valorPago").value||0),observacao:$("obs").value,itens:JSON.parse(JSON.stringify(pedido)),total:total(),status:"preparo",operador:perfil};historico.push(p);save();await syncPedido(p);await enviarPedidoParaPlanilha(p,true);toast("Pedido salvo");if(localStorage.getItem("auto_print")==="sim"){printCupom(p);setTimeout(()=>window.print(),250)}limparPedido();$("cliente").value=$("valorPago").value=$("obs").value=$("busca").value="";renderProdutos();resumo()}
+function limparPedido(){pedido=[];renderPedido()}function printCupom(p){let h=`<div class=centro><b>BARRACA DA CRIS</b><br>PEDIDO Nº ${String(p.numero).padStart(3,"0")}</div><div class=linha></div>Cliente: ${p.cliente}<br>Pagamento: ${p.pagamento}<div class=linha></div>`;p.itens.forEach(i=>h+=`${i.qtd}x ${i.nome}<div class=row><span></span><span>${money(i.qtd*i.preco)}</span></div>`);h+=`<div class=linha></div><div class=row><b>TOTAL</b><b>${money(p.total)}</b></div><br>Obs: ${p.observacao||"-"}`;$("cupom").innerHTML=h}
+function imprimirAtual(){if(!pedido.length)return alert("Adicione produtos");printCupom({numero:Number(localStorage.getItem("num_bc")||0)+1,cliente:$("cliente").value||"Não informado",pagamento:$("pagamento").value,itens:pedido,total:total(),observacao:$("obs").value});window.print()}function whats(){let t="BARRACA DA CRIS\n";pedido.forEach(i=>t+=`${i.qtd}x ${i.nome}\n`);t+="Total: "+money(total());open("https://wa.me/?text="+encodeURIComponent(t),"_blank")}
+function card(p,modo){let its=p.itens.map(i=>`${i.qtd}x ${i.nome}`).join("<br>");return `<div class=card><h3>Pedido ${String(p.numero).padStart(3,"0")} <span class="badge ${p.status}">${p.status}</span></h3>${p.cliente}<br>${its}<br><b>${money(p.total)}</b><br>${modo==="cozinha"&&p.status==="preparo"?`<button class="btn verde" onclick="status('${p.id}','pronto')">Pronto</button>`:""}${modo==="caixa"&&p.status==="pronto"?`<button class="btn verde" onclick="status('${p.id}','entregue')">Receber</button>`:""}</div>`}
+async function status(id,st){let p=historico.find(x=>x.id===id);if(p){p.status=st;save();await syncPedido(p);renderCozinha();renderCaixa();resumo()}}
+function renderCozinha(){let l=historico.slice().reverse().filter(p=>p.status===filtroCoz);$("listaCozinha").innerHTML=l.map(p=>card(p,"cozinha")).join("")||"<div class=box>Nenhum pedido</div>"}
+function renderCaixa(){let l=historico.slice().reverse().filter(p=>p.status===filtroCx);$("listaCaixa").innerHTML=`<div class=box>Total: ${money(l.reduce((s,p)=>s+p.total,0))}</div>`+(l.map(p=>card(p,"caixa")).join("")||"<div class=box>Nenhum pedido</div>")}
+function resumo(){let l=historico.filter(p=>p.data?.slice(0,10)===new Date().toISOString().slice(0,10)&&p.status!=="cancelado");$("resumo").innerHTML=`Total hoje: <b>${money(l.reduce((s,p)=>s+p.total,0))}</b><br>Pedidos: ${l.length}<br>Preparo: ${historico.filter(p=>p.status==="preparo").length}<br>Nuvem: ${window.fb?"conectada":"não configurada"}`}
+function admProdutos(){dedup();$("areaAdm").innerHTML=`<h3>Produtos</h3><input id=pn placeholder=Nome><input id=pp type=number placeholder=Preço><select id=pc>${categorias.map(c=>`<option>${c}</option>`).join("")}</select><button class="btn verde" onclick="addProd()">Adicionar</button><h3>Categorias</h3><input id=cn placeholder="Nova categoria"><button class="btn azul" onclick="addCat()">Adicionar categoria</button><div>${categorias.map(c=>`<div class=card>${c}<br><button class="btn vermelho" onclick="delCat('${c.replaceAll("'","")}')">Excluir categoria e produtos</button></div>`).join("")}</div><h3>Produtos</h3>${produtos.map((p,i)=>`<div class=card>${p.nome} - ${money(p.preco)}<br>${p.categoria}<br><button class="btn vermelho" onclick="produtos.splice(${i},1);save();syncConfig();enviarCatalogoParaPlanilha();admProdutos()">Excluir</button></div>`).join("")}`}
+function addProd(){let n=$("pn").value,pr=Number($("pp").value),c=$("pc").value;if(!n||!pr)return;if(produtos.some(p=>norm(p.nome)===norm(n)&&norm(p.categoria)===norm(c)))return alert("Produto já existe");produtos.push({nome:n,preco:pr,categoria:c});save();syncConfig();enviarCatalogoParaPlanilha();admProdutos();renderProdutos()}
+function addCat(){let c=$("cn").value.trim();if(!c)return;if(categorias.some(x=>norm(x)===norm(c)))return alert("Categoria já existe");categorias.push(c);save();syncConfig();enviarCatalogoParaPlanilha();admProdutos()}
+function delCat(c){if(confirm("Excluir categoria e produtos?")){produtos=produtos.filter(p=>p.categoria!==c);categorias=categorias.filter(x=>x!==c);save();syncConfig();enviarCatalogoParaPlanilha();admProdutos();renderProdutos()}}
+function relatorioPeriodo(ini,fim){
+  let lista=historico.filter(p=>p.data?.slice(0,10)>=ini&&p.data?.slice(0,10)<=fim&&p.status!=="cancelado");
+  let total=lista.reduce((s,p)=>s+Number(p.total||0),0),pg={},prod={},cat={};
+  lista.forEach(p=>{
+    pg[p.pagamento]=(pg[p.pagamento]||0)+Number(p.total||0);
+    (p.itens||[]).forEach(i=>{
+      prod[i.nome]=(prod[i.nome]||{qtd:0,total:0});
+      prod[i.nome].qtd+=Number(i.qtd||0);
+      prod[i.nome].total+=Number(i.qtd||0)*Number(i.preco||0);
+      cat[i.categoria||"Sem categoria"]=(cat[i.categoria||"Sem categoria"]||0)+Number(i.qtd||0)*Number(i.preco||0);
+    });
+  });
+  return{lista,total,pg,prod,cat};
+}
+function admRelatorio(){
+  let h=new Date().toISOString().slice(0,10);
+  $("areaAdm").innerHTML=`<h3>Relatórios Avançados</h3>
+  <input id=iniRel type=date value="${h}">
+  <input id=fimRel type=date value="${h}">
+  <button class="btn verde" onclick="gerarRel()">Gerar</button>
+  <button class="btn verde" onclick="enviarTodosPedidosParaPlanilha()">Enviar relatório para Google Sheets</button><button class="btn laranja" onclick="csv()">Baixar CSV</button>
+  <div id=relOut></div>`;
+  gerarRel();
+}
+function gerarRel(){
+  let r=relatorioPeriodo($("iniRel").value,$("fimRel").value);
+  let mais=Object.entries(r.prod).sort((a,b)=>b[1].qtd-a[1].qtd)[0];
+  let out=`<div class=card>Total: <b>${money(r.total)}</b><br>Pedidos: ${r.lista.length}<br>Ticket médio: ${money(r.lista.length?r.total/r.lista.length:0)}<br>Mais vendido: ${mais?mais[0]+" ("+mais[1].qtd+")":"-"}</div>`;
+  out+=`<h3>Pagamento</h3><table class=tabela><tr><th>Forma</th><th>Total</th></tr>`;
+  Object.keys(r.pg).forEach(k=>out+=`<tr><td>${k}</td><td>${money(r.pg[k])}</td></tr>`);
+  out+=`</table><h3>Categorias</h3><table class=tabela><tr><th>Categoria</th><th>Total</th></tr>`;
+  Object.keys(r.cat).forEach(k=>out+=`<tr><td>${k}</td><td>${money(r.cat[k])}</td></tr>`);
+  out+=`</table><h3>Produtos</h3><table class=tabela><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr>`;
+  Object.keys(r.prod).forEach(k=>out+=`<tr><td>${k}</td><td>${r.prod[k].qtd}</td><td>${money(r.prod[k].total)}</td></tr>`);
+  out+="</table>";
+  $("relOut").innerHTML=out;
+}
+function csv(){
+  let ini=$("iniRel")?.value||"0000-01-01",fim=$("fimRel")?.value||"9999-12-31";
+  let lista=historico.filter(p=>p.data?.slice(0,10)>=ini&&p.data?.slice(0,10)<=fim);
+  let c="\ufeffData,Número,Cliente,Pagamento,Total,Status,Operador,Itens\n";
+  lista.forEach(p=>c+=`"${p.data}","${p.numero}","${p.cliente}","${p.pagamento||""}","${p.total}","${p.status}","${p.operador||""}","${(p.itens||[]).map(i=>i.qtd+'x '+i.nome).join(' | ')}"\n`);
+  baixar("vendas_"+ini+"_a_"+fim+".csv",c,"text/csv");
+}
+function admPedidos(){
+  $("areaAdm").innerHTML=`<h3>Corrigir Pedidos</h3>`+
+  historico.slice().reverse().map(p=>`<div class=card>
+    Pedido ${p.numero} - ${money(p.total)} - ${p.status}<br>
+    <button class="btn azul" onclick="abrirEdit('${p.id}')">Editar</button>
+    <button class="btn vermelho" onclick="status('${p.id}','cancelado')">Cancelar</button>
+    <button class="btn verde" onclick="pedido=JSON.parse(JSON.stringify(historico.find(x=>x.id==='${p.id}').itens));abrir('pedido');renderPedido()">Repetir</button>
+  </div>`).join("");
+}
+function abrirEdit(id){
+  let p=historico.find(x=>x.id===id);
+  if(!p)return;
+  $("editId").value=id;
+  $("editCliente").value=p.cliente||"";
+  $("editPagamento").value=p.pagamento||"PIX";
+  $("editValorPago").value=p.valorPago||0;
+  $("editTotal").value=p.total||0;
+  $("editStatus").value=p.status||"preparo";
+  $("editObs").value=p.observacao||"";
+  $("editItens").innerHTML="<h3>Itens</h3>"+(p.itens||[]).map((i,n)=>`<div class=card>${i.nome}<br>Qtd: <input type=number id=qtd_${n} value="${i.qtd}"> Preço: <input type=number id=preco_${n} value="${i.preco}" step=0.01></div>`).join("");
+  $("modalEditar").style.display="block";
+}
+async function salvarEdicao(){
+  let id=$("editId").value,p=historico.find(x=>x.id===id);
+  if(!p)return;
+  p.cliente=$("editCliente").value||"Não informado";
+  p.pagamento=$("editPagamento").value;
+  p.valorPago=Number($("editValorPago").value||0);
+  p.status=$("editStatus").value;
+  p.observacao=$("editObs").value;
+  (p.itens||[]).forEach((i,n)=>{i.qtd=Number($("qtd_"+n).value||0);i.preco=Number($("preco_"+n).value||0)});
+  p.total=(p.itens||[]).reduce((s,i)=>s+Number(i.qtd||0)*Number(i.preco||0),0);
+  if(Number($("editTotal").value||0)!==p.total)p.total=Number($("editTotal").value||p.total);
+  save();
+  await syncPedido(p);
+  $("modalEditar").style.display="none";
+  admPedidos();
+  resumo();
+}
+
+function dataLocalISO(d=new Date()){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function custosAtivos(){return (custos||[]).filter(c=>c.status!=="cancelado")}
+function vendasPeriodo(ini,fim){return (historico||[]).filter(p=>(p.data||"").slice(0,10)>=ini&&(p.data||"").slice(0,10)<=fim&&p.status!=="cancelado")}
+function custosPeriodo(ini,fim){return custosAtivos().filter(c=>(c.data||"").slice(0,10)>=ini&&(c.data||"").slice(0,10)<=fim)}
+function resumoFinanceiro(ini,fim){
+  const vendas=vendasPeriodo(ini,fim),gastos=custosPeriodo(ini,fim);
+  const faturamento=vendas.reduce((s,p)=>s+Number(p.total||0),0);
+  const totalCustos=gastos.reduce((s,c)=>s+Number(c.valor||0),0);
+  const lucro=faturamento-totalCustos,margem=faturamento?lucro/faturamento*100:0,porCat={};
+  gastos.forEach(c=>porCat[c.categoria||"Outros"]=(porCat[c.categoria||"Outros"]||0)+Number(c.valor||0));
+  return{vendas,gastos,faturamento,totalCustos,lucro,margem,porCat};
+}
+function admFinanceiro(){
+  const hoje=dataLocalISO();
+  $("areaAdm").innerHTML=`<h3>Custos e Lucro</h3>
+  <div class=card><h3>Lançar custo</h3>
+    <input id=custoData type=date value="${hoje}">
+    <select id=custoCategoria><option>Mercadoria</option><option>Embalagem</option><option>Gás</option><option>Transporte</option><option>Funcionário</option><option>Taxa de cartão</option><option>Manutenção</option><option>Outros</option></select>
+    <input id=custoDesc placeholder="Descrição do custo">
+    <input id=custoValor type=number step=0.01 placeholder="Valor">
+    <select id=custoPagamento><option>PIX</option><option>Dinheiro</option><option>Cartão Débito</option><option>Cartão Crédito</option></select>
+    <textarea id=custoObs placeholder="Observação"></textarea>
+    <button class="btn verde" onclick="addCusto()">Salvar custo</button>
+  </div>
+  <div class=card><h3>Relatório de lucro</h3>
+    <input id=finIni type=date value="${hoje}">
+    <input id=finFim type=date value="${hoje}">
+    <div class=grid><button class="btn azul" onclick="gerarFinanceiro()">Gerar dia</button><button class="btn roxo" onclick="relatorioMesAtual()">Mês atual</button></div>
+    <div class=grid><button class="btn verde" onclick="enviarCustosParaPlanilha()">Enviar custos para Sheets</button><button class="btn laranja" onclick="enviarTudoFinanceiro()">Enviar financeiro completo</button></div>
+    <div id=finOut></div>
+  </div>
+  <div class=card><h3>Custos lançados</h3><div id=listaCustos></div></div>`;
+  gerarFinanceiro();renderCustos();
+}
+function relatorioMesAtual(){const h=dataLocalISO();$("finIni").value=h.slice(0,7)+"-01";$("finFim").value=h;gerarFinanceiro()}
+async function addCusto(){
+  const valor=Number($("custoValor").value||0); if(!valor||valor<=0){alert("Informe o valor do custo.");return}
+  const c={id:"custo_"+Date.now(),data:$("custoData").value||dataLocalISO(),categoria:$("custoCategoria").value||"Outros",descricao:$("custoDesc").value||"Custo",valor,pagamento:$("custoPagamento").value||"",observacao:$("custoObs").value||"",operador:perfil||"",status:"ativo",criadoEm:new Date().toISOString()};
+  custos.push(c);save();await syncCusto(c);await enviarCustoParaPlanilha(c,true);toast("Custo salvo");
+  $("custoDesc").value=$("custoValor").value=$("custoObs").value="";renderCustos();gerarFinanceiro();
+}
+function renderCustos(){
+  const div=$("listaCustos");if(!div)return;
+  div.innerHTML=custosAtivos().slice().reverse().slice(0,80).map(c=>`<div class=card><b>${c.categoria}</b> • ${money(c.valor)}<br>${c.data||""} - ${c.descricao||""}<br><small>${c.pagamento||""}${c.observacao?" • "+c.observacao:""}</small><br><button class="btn vermelho" onclick="cancelarCusto('${c.id}')">Cancelar custo</button></div>`).join("")||"Nenhum custo lançado.";
+}
+async function cancelarCusto(id){
+  if(!confirm("Cancelar este custo?"))return;
+  const c=custos.find(x=>x.id===id); if(!c)return;
+  c.status="cancelado";c.canceladoEm=new Date().toISOString();save();await syncCusto(c);await enviarCustoParaPlanilha(c,true);renderCustos();gerarFinanceiro();
+}
+function gerarFinanceiro(){
+  const ini=$("finIni")?.value||dataLocalISO(),fim=$("finFim")?.value||ini,r=resumoFinanceiro(ini,fim);
+  let out=`<div class=card><b>Resumo financeiro</b><br>Faturamento bruto: <b>${money(r.faturamento)}</b><br>Custos lançados: <b>${money(r.totalCustos)}</b><br>Lucro estimado: <b>${money(r.lucro)}</b><br>Margem estimada: <b>${r.margem.toFixed(1).replace(".",",")}%</b><br>Pedidos no período: ${r.vendas.length}<br>Custos no período: ${r.gastos.length}</div>`;
+  out+=`<h3>Custos por categoria</h3><table class=tabela><tr><th>Categoria</th><th>Total</th></tr>`;
+  Object.keys(r.porCat).sort().forEach(k=>out+=`<tr><td>${k}</td><td>${money(r.porCat[k])}</td></tr>`);
+  $("finOut").innerHTML=out+"</table>";
+}
+async function syncCusto(c){
+  if(!window.fb||syncing)return;
+  try{await window.fs.setDoc(window.fs.doc(window.db,"custos",c.id),c,{merge:true})}catch(e){console.error(e);toast("Erro Firebase custos")}
+}
+async function enviarCustoParaPlanilha(custo,silencioso=false){return await enviarPayloadParaPlanilha({tipo:"custo",custo},silencioso)}
+async function enviarCustosParaPlanilha(){const ok=await enviarPayloadParaPlanilha({tipo:"custos",custos:custos||[]});if(ok)toast("Custos enviados para Google Sheets")}
+async function enviarTudoFinanceiro(){await enviarTodosPedidosParaPlanilha();await enviarCatalogoParaPlanilha();await enviarCustosParaPlanilha();toast("Financeiro enviado para Google Sheets")}
+
+function admBackup(){
+  $("areaAdm").innerHTML=`<h3>Backup/Nuvem</h3>
+
+  <div class=card>
+    <b>Firebase:</b> ${window.fb?"conectado ✅":"não conectado ❌"}<br>
+    <small>Serve para sincronizar pedidos entre celulares em tempo real.</small>
+  </div>
+
+  <h3>Firebase</h3>
+  <button class="btn azul" onclick="testeFirebase()">Testar Firebase</button>
+  <button class="btn roxo" onclick="forcarSync()">Enviar tudo para Firebase</button>
+
+  <div class=card>
+    <b>Google Sheets:</b> configurado ✅<br>
+    <small>Serve para relatório e controle na planilha online.</small>
+  </div>
+
+  <h3>Enviar para a planilha online</h3>
+  <button class="btn verde" onclick="enviarTodosPedidosParaPlanilha()">Enviar todos os pedidos</button>
+  <button class="btn azul" onclick="enviarCatalogoParaPlanilha()">Enviar produtos e categorias</button>
+  <button class="btn verde" onclick="enviarCustosParaPlanilha()">Enviar custos</button>
+  <button class="btn laranja" onclick="reenviarPendentesPlanilha()">Reenviar pendentes</button>
+  <button class="btn roxo" onclick="enviarTudoParaPlanilha()">Enviar tudo para Google Sheets</button>
+  <button class="btn azul" onclick="testeEnvioPlanilha()">Testar envio para planilha</button>
+
+  <h3>Backup local</h3>
+  <button class="btn cinza" onclick="backup()">Baixar backup JSON</button>
+  <button class="btn laranja" onclick="$('file').click()">Restaurar JSON</button>
+
+  <div class="card">
+    <b>Atenção:</b><br>
+    Firebase sincroniza os celulares.<br>
+    Google Sheets guarda relatório na planilha.<br>
+    Backup JSON cria arquivo no celular para restauração.
+  </div>`;
+}
+function admConfig(){
+  $("areaAdm").innerHTML=`<h3>Config</h3>
+  <button class="btn azul" onclick="document.body.classList.toggle('dark');localStorage.setItem('dark',document.body.classList.contains('dark'));syncConfig()">Tema</button>
+  <button class="btn roxo" onclick="localStorage.setItem('auto_print',localStorage.getItem('auto_print')==='sim'?'nao':'sim');syncConfig();admConfig()">Impressão automática: ${localStorage.getItem("auto_print")==="sim"?"sim":"não"}</button>
+  <h3>Trocar senhas</h3>
+  <select id=sp><option>atendimento</option><option>cozinha</option><option>caixa</option><option>adm</option></select>
+  <input id=ns placeholder="Nova senha">
+  <button class="btn verde" onclick="trocarSenha()">Salvar senha</button>`;
+}
+function trocarSenha(){
+  let s=$("ns").value.trim();
+  if(s.length<4)return alert("Use no mínimo 4 dígitos.");
+  senhas[$("sp").value]=s;
+  save();
+  syncConfig();
+  alert("Senha alterada");
+}
+function backup(){
+  baixar("backup_pro6_0.json",JSON.stringify({produtos,categorias,historico,custos,senhas,
+    num:localStorage.getItem("num_bc"),
+    auto_print:localStorage.getItem("auto_print"),
+    dark:localStorage.getItem("dark")
+  },null,2),"application/json");
+}
+
+function xmlExcelEscape(v){
+  return String(v??"").replace(/[&<>"']/g,function(m){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&apos;"}[m];
+  });
+}
+function excelCell(v){
+  if(typeof v==="number" && isFinite(v)){
+    return `<Cell><Data ss:Type="Number">${v}</Data></Cell>`;
+  }
+  return `<Cell><Data ss:Type="String">${xmlExcelEscape(v)}</Data></Cell>`;
+}
+function excelSheet(nome, linhas){
+  let safeName=String(nome).replace(/[\\\/\?\*\[\]:]/g," ").slice(0,31);
+  let rows=linhas.map(l=>`<Row>${l.map(excelCell).join("")}</Row>`).join("");
+  return `<Worksheet ss:Name="${xmlExcelEscape(safeName)}"><Table>${rows}</Table></Worksheet>`;
+}
+function backupExcel(){
+  const hist=historico||[];
+  const itens=[];
+  hist.forEach(p=>{
+    (p.itens||[]).forEach(i=>{
+      itens.push([
+        p.numero||"",
+        p.data||"",
+        p.cliente||"",
+        p.status||"",
+        i.nome||"",
+        i.categoria||"",
+        Number(i.qtd||0),
+        Number(i.preco||0),
+        Number(i.qtd||0)*Number(i.preco||0)
+      ]);
+    });
+  });
+
+  const planilhas=[
+    excelSheet("Produtos", [
+      ["Nome","Preço","Categoria"],
+      ...produtos.map(p=>[p.nome,Number(p.preco||0),p.categoria])
+    ]),
+    excelSheet("Categorias", [
+      ["Categoria"],
+      ...categorias.map(c=>[c])
+    ]),
+    excelSheet("Pedidos", [
+      ["Número","Data","Cliente","Pagamento","Valor Pago","Total","Status","Operador","Observação"],
+      ...hist.map(p=>[
+        p.numero||"",
+        p.data||"",
+        p.cliente||"",
+        p.pagamento||"",
+        Number(p.valorPago||0),
+        Number(p.total||0),
+        p.status||"",
+        p.operador||"",
+        p.observacao||""
+      ])
+    ]),
+    excelSheet("Itens", [
+      ["Pedido","Data","Cliente","Status","Produto","Categoria","Qtd","Preço","Subtotal"],
+      ...itens
+    ]),
+    excelSheet("Senhas", [
+      ["Perfil","Senha"],
+      ...Object.keys(senhas||{}).map(k=>[k,senhas[k]])
+    ]),
+    excelSheet("Custos", [["Data","Categoria","Descrição","Valor","Pagamento","Operador","Status","Observação"],...(custos||[]).map(c=>[c.data||"",c.categoria||"",c.descricao||"",{type:"money",value:Number(c.valor||0)},c.pagamento||"",c.operador||"",c.status||"",c.observacao||""])], {cols:8,widths:[110,150,220,100,120,120,100,220]}),
+
+    excelSheet("Config", [
+      ["Campo","Valor"],
+      ["Número atual",localStorage.getItem("num_bc")||"0"],
+      ["Impressão automática",localStorage.getItem("auto_print")||"nao"],
+      ["Tema escuro",localStorage.getItem("dark")||"false"],
+      ["Data do backup",new Date().toLocaleString("pt-BR")],
+      ["Versão","PRO 5.2 Excel"]
+    ])
+  ];
+
+  const xml=`<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ ${planilhas.join("")}
+</Workbook>`;
+
+  baixar("backup_barraca_da_cris_excel.xls",xml,"application/vnd.ms-excel;charset=utf-8");
+  toast("Excel exportado");
+}
+
+
+function excelXmlEscape(v){
+  return String(v??"").replace(/[&<>"']/g,function(m){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&apos;"}[m];
+  });
+}
+function excelData(v){
+  if(typeof v==="number" && isFinite(v)){
+    return `<Cell ss:StyleID="num"><Data ss:Type="Number">${v}</Data></Cell>`;
+  }
+  return `<Cell><Data ss:Type="String">${excelXmlEscape(v)}</Data></Cell>`;
+}
+function excelMoney(v){
+  return `<Cell ss:StyleID="money"><Data ss:Type="Number">${Number(v||0)}</Data></Cell>`;
+}
+function excelHeaderCell(v){
+  return `<Cell ss:StyleID="header"><Data ss:Type="String">${excelXmlEscape(v)}</Data></Cell>`;
+}
+function excelTitleRow(titulo, colunas=6){
+  let cells=`<Cell ss:MergeAcross="${Math.max(0,colunas-1)}" ss:StyleID="title"><Data ss:Type="String">${excelXmlEscape(titulo)}</Data></Cell>`;
+  return `<Row ss:Height="24">${cells}</Row>`;
+}
+function excelSheet(nome, linhas, opts={}){
+  let safeName=String(nome).replace(/[\\\/\?\*\[\]:]/g," ").slice(0,31);
+  let cols = opts.cols || 8;
+  let widths = opts.widths || Array(cols).fill(120);
+  let colXml = widths.map(w=>`<Column ss:Width="${w}"/>`).join("");
+  let rows = linhas.map((linha,idx)=>{
+    if(linha && linha.__title)return excelTitleRow(linha.__title, cols);
+    return `<Row>${linha.map((c,i)=>{
+      if(idx===0 || (linha.__header))return excelHeaderCell(c);
+      if(c && typeof c==="object" && c.type==="money")return excelMoney(c.value);
+      if(c && typeof c==="object" && c.type==="number")return excelData(Number(c.value||0));
+      return excelData(c);
+    }).join("")}</Row>`;
+  }).join("");
+  return `<Worksheet ss:Name="${excelXmlEscape(safeName)}"><Table>${colXml}${rows}</Table></Worksheet>`;
+}
+function resumoBackupExcel(){
+  const hist=(historico||[]).filter(p=>p.status!=="cancelado");
+  const total=hist.reduce((s,p)=>s+Number(p.total||0),0);
+  const pedidos=hist.length;
+  let itensVendidos=0, prod={};
+  hist.forEach(p=>(p.itens||[]).forEach(i=>{
+    itensVendidos+=Number(i.qtd||0);
+    if(!prod[i.nome])prod[i.nome]={qtd:0,total:0};
+    prod[i.nome].qtd+=Number(i.qtd||0);
+    prod[i.nome].total+=Number(i.qtd||0)*Number(i.preco||0);
+  }));
+  const mais=Object.entries(prod).sort((a,b)=>b[1].qtd-a[1].qtd)[0];
+  return {total,pedidos,itensVendidos,mais:mais?`${mais[0]} (${mais[1].qtd})`:"-"};
+}
+function backupExcelProfissional(){
+  const hist=historico||[];
+  const histValidos=hist.filter(p=>p.status!=="cancelado");
+  const resumo=resumoBackupExcel();
+
+  const itens=[];
+  hist.forEach(p=>{
+    (p.itens||[]).forEach(i=>{
+      itens.push([
+        p.numero||"",
+        p.data||"",
+        p.cliente||"",
+        p.status||"",
+        i.nome||"",
+        i.categoria||"",
+        {type:"number",value:Number(i.qtd||0)},
+        {type:"money",value:Number(i.preco||0)},
+        {type:"money",value:Number(i.qtd||0)*Number(i.preco||0)}
+      ]);
+    });
+  });
+
+  const porPagamento={};
+  const porCategoria={};
+  const porProduto={};
+  histValidos.forEach(p=>{
+    porPagamento[p.pagamento||"Não informado"]=(porPagamento[p.pagamento||"Não informado"]||0)+Number(p.total||0);
+    (p.itens||[]).forEach(i=>{
+      porCategoria[i.categoria||"Sem categoria"]=(porCategoria[i.categoria||"Sem categoria"]||0)+Number(i.qtd||0)*Number(i.preco||0);
+      if(!porProduto[i.nome])porProduto[i.nome]={qtd:0,total:0};
+      porProduto[i.nome].qtd+=Number(i.qtd||0);
+      porProduto[i.nome].total+=Number(i.qtd||0)*Number(i.preco||0);
+    });
+  });
+
+  const sheets=[
+    excelSheet("Resumo", [
+      {__title:"Barraca da Cris - Resumo do Backup"},
+      ["Indicador","Valor"],
+      ["Total vendido",{type:"money",value:resumo.total}],
+      ["Pedidos",{type:"number",value:resumo.pedidos}],
+      ["Itens vendidos",{type:"number",value:resumo.itensVendidos}],
+      ["Produto mais vendido",resumo.mais],
+      ["Data do backup",new Date().toLocaleString("pt-BR")]
+    ], {cols:2,widths:[180,220]}),
+
+    excelSheet("Produtos", [
+      ["Nome","Preço","Categoria"],
+      ...(produtos||[]).map(p=>[p.nome,{type:"money",value:Number(p.preco||0)},p.categoria])
+    ], {cols:3,widths:[220,90,180]}),
+
+    excelSheet("Categorias", [
+      ["Categoria"],
+      ...(categorias||[]).map(c=>[c])
+    ], {cols:1,widths:[220]}),
+
+    excelSheet("Pedidos", [
+      ["Número","Data","Cliente","Pagamento","Valor Pago","Total","Status","Operador","Observação"],
+      ...hist.map(p=>[
+        p.numero||"",
+        p.data||"",
+        p.cliente||"",
+        p.pagamento||"",
+        {type:"money",value:Number(p.valorPago||0)},
+        {type:"money",value:Number(p.total||0)},
+        p.status||"",
+        p.operador||"",
+        p.observacao||""
+      ])
+    ], {cols:9,widths:[70,170,180,110,100,100,100,100,240]}),
+
+    excelSheet("Itens", [
+      ["Pedido","Data","Cliente","Status","Produto","Categoria","Qtd","Preço","Subtotal"],
+      ...itens
+    ], {cols:9,widths:[70,170,180,100,220,180,60,90,100]}),
+
+    excelSheet("Por pagamento", [
+      ["Forma","Total"],
+      ...Object.keys(porPagamento).map(k=>[k,{type:"money",value:porPagamento[k]}])
+    ], {cols:2,widths:[180,120]}),
+
+    excelSheet("Por categoria", [
+      ["Categoria","Total"],
+      ...Object.keys(porCategoria).map(k=>[k,{type:"money",value:porCategoria[k]}])
+    ], {cols:2,widths:[220,120]}),
+
+    excelSheet("Por produto", [
+      ["Produto","Qtd","Total"],
+      ...Object.keys(porProduto).map(k=>[k,{type:"number",value:porProduto[k].qtd},{type:"money",value:porProduto[k].total}])
+    ], {cols:3,widths:[220,70,120]}),
+
+    excelSheet("Custos", [["Data","Categoria","Descrição","Valor","Pagamento","Operador","Status","Observação"],...(custos||[]).map(c=>[c.data||"",c.categoria||"",c.descricao||"",{type:"money",value:Number(c.valor||0)},c.pagamento||"",c.operador||"",c.status||"",c.observacao||""])], {cols:8,widths:[110,150,220,100,120,120,100,220]}),
+
+    excelSheet("Config", [
+      ["Campo","Valor"],
+      ["Número atual",localStorage.getItem("num_bc")||"0"],
+      ["Impressão automática",localStorage.getItem("auto_print")||"nao"],
+      ["Tema escuro",localStorage.getItem("dark")||"false"],
+      ["Nuvem",window.fb?"conectada":"não configurada"],
+      ["Versão","PRO 6.0 Financeiro"]
+    ], {cols:2,widths:[190,220]})
+  ];
+
+  const xml=`<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Arial" ss:Size="11"/>
+  </Style>
+  <Style ss:ID="title">
+   <Font ss:FontName="Arial" ss:Size="14" ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#1E3A8A" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="header">
+   <Font ss:FontName="Arial" ss:Size="11" ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#2563EB" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center"/>
+  </Style>
+  <Style ss:ID="money">
+   <NumberFormat ss:Format="&quot;R$&quot; #,##0.00"/>
+  </Style>
+  <Style ss:ID="num">
+   <NumberFormat ss:Format="0"/>
+  </Style>
+ </Styles>
+ ${sheets.join("")}
+</Workbook>`;
+
+  baixar("backup_barraca_da_cris_profissional.xls",xml,"application/vnd.ms-excel;charset=utf-8");
+  toast("Excel profissional exportado");
+}
+
+
+const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzA4HZ0EKozl9kap2kgSuQpc8RV9-laSPeuwJJQ7wqR3sgvBmRelfvaD3hjnoeunqMFXw/exec";
+const GOOGLE_SHEETS_TOKEN = "1234";
+
+function sheetsConfigurado(){
+  return GOOGLE_SHEETS_URL && GOOGLE_SHEETS_URL.includes("/exec");
+}
+
+function pedidosPendentesSheets(){
+  return JSON.parse(localStorage.getItem("pendentes_sheets_bc")||"[]");
+}
+
+function salvarPendentesSheets(lista){
+  localStorage.setItem("pendentes_sheets_bc",JSON.stringify(lista||[]));
+}
+
+function adicionarPendenteSheets(pedido){
+  const lista=pedidosPendentesSheets();
+  if(!lista.some(p=>p.id===pedido.id)){
+    lista.push(pedido);
+    salvarPendentesSheets(lista);
+  }
+}
+
+async function enviarPayloadParaPlanilha(payload,silencioso=false){
+  if(!sheetsConfigurado()){
+    if(!silencioso)alert("Google Sheets não configurado.");
+    return false;
+  }
+
+  try{
+    await fetch(GOOGLE_SHEETS_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        token:GOOGLE_SHEETS_TOKEN,
+        ...payload
+      })
+    });
+
+    return true;
+  }catch(e){
+    console.error("Erro ao enviar para Google Sheets",e);
+    if(!silencioso)toast("Não foi possível enviar. Ficou pendente.");
+    return false;
+  }
+}
+
+async function enviarPedidoParaPlanilha(pedido,silencioso=false){
+  const ok=await enviarPayloadParaPlanilha({
+    tipo:"pedido",
+    pedido
+  },silencioso);
+
+  if(!ok){
+    adicionarPendenteSheets(pedido);
+  }
+
+  return ok;
+}
+
+
+async function testeEnvioPlanilha(){
+  const pedidoTeste={
+    id:"teste_app_"+Date.now(),
+    numero:9999,
+    data:new Date().toISOString(),
+    cliente:"Teste do app",
+    pagamento:"PIX",
+    valorPago:2,
+    observacao:"Teste de envio para Google Sheets",
+    itens:[{nome:"☕ Café",categoria:"☕ Cafés",qtd:1,preco:2}],
+    total:2,
+    status:"entregue",
+    operador:perfil||"teste"
+  };
+  const ok=await enviarPedidoParaPlanilha(pedidoTeste,false);
+  if(ok)toast("Teste enviado. Confira a aba Pedidos.");
+}
+
+async function enviarTodosPedidosParaPlanilha(){
+  if(!historico.length){
+    alert("Não há pedidos para enviar.");
+    return;
+  }
+
+  const ok=await enviarPayloadParaPlanilha({
+    tipo:"todos_pedidos",
+    pedidos:historico
+  });
+
+  if(ok){
+    localStorage.removeItem("pendentes_sheets_bc");
+    toast("Pedidos enviados para a mesma planilha online");
+  }else{
+    historico.forEach(adicionarPendenteSheets);
+  }
+}
+
+async function enviarCatalogoParaPlanilha(){
+  const ok=await enviarPayloadParaPlanilha({
+    tipo:"catalogo",
+    produtos,
+    categorias
+  });
+
+  if(ok)toast("Catálogo enviado para a mesma planilha");
+}
+
+
+async function enviarTudoParaPlanilha(){
+  await enviarTodosPedidosParaPlanilha();
+  await enviarCatalogoParaPlanilha();
+  await enviarCustosParaPlanilha();
+  toast("Tudo enviado para Google Sheets");
+}
+
+async function reenviarPendentesPlanilha(){
+  const pendentes=pedidosPendentesSheets();
+
+  if(!pendentes.length){
+    toast("Não há pendentes");
+    return;
+  }
+
+  const ok=await enviarPayloadParaPlanilha({
+    tipo:"todos_pedidos",
+    pedidos:pendentes
+  });
+
+  if(ok){
+    localStorage.removeItem("pendentes_sheets_bc");
+    toast("Pendentes enviados para a planilha");
+  }
+}
+
+function restaurar(e){
+  let f=e.target.files[0];
+  if(!f)return;
+  let r=new FileReader();
+  r.onload=()=>{
+    let b=JSON.parse(r.result);
+    produtos=b.produtos||produtos;
+    categorias=b.categorias||categorias;
+    historico=b.historico||historico;custos=b.custos||custos;
+    senhas=b.senhas||senhas;
+    if(b.num)localStorage.setItem("num_bc",b.num);
+    if(b.auto_print)localStorage.setItem("auto_print",b.auto_print);
+    if(b.dark)localStorage.setItem("dark",b.dark);
+    save();
+    syncConfig();
+    alert("Restaurado");
+  };
+  r.readAsText(f);
+}
+function baixar(n,c,t){let b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;a.click();URL.revokeObjectURL(u)}
+
+async function testeFirebase(){
+  if(!window.fb){
+    alert("Firebase não conectou. Confira a configuração e as regras do Firestore.");
+    return;
+  }
+
+  const n=Number(localStorage.getItem("num_bc")||0)+1;
+  const p={
+    id:"teste_firebase_"+Date.now(),
+    numero:n,
+    data:new Date().toISOString(),
+    cliente:"Teste Firebase",
+    pagamento:"PIX",
+    valorPago:2,
+    observacao:"Teste de sincronização Firebase",
+    itens:[{nome:"☕ Café",preco:2,categoria:"☕ Cafés",qtd:1}],
+    total:2,
+    status:"preparo",
+    operador:perfil||"teste"
+  };
+
+  historico.push(p);
+  save();
+  await syncPedido(p);
+  toast("Teste Firebase enviado");
+  renderCozinha();
+  renderCaixa();
+  resumo();
+}
+
+async function syncPedido(p){
+  if(!window.fb||syncing)return;
+  try{await window.fs.setDoc(window.fs.doc(window.db,"pedidos",p.id),p,{merge:true})}catch(e){console.error(e)}
+}
+async function syncConfig(){
+  if(!window.fb||syncing)return;
+  try{
+    await window.fs.setDoc(window.fs.doc(window.db,"config","geral"),{
+      produtos,categorias,senhas,
+      auto_print:localStorage.getItem("auto_print")||"nao",
+      dark:localStorage.getItem("dark")||"false",
+      num:localStorage.getItem("num_bc")||"0"
+    },{merge:true});
+  }catch(e){console.error(e)}
+}
+async function forcarSync(){
+  if(!window.fb)return alert("Firebase não configurado");
+  for(const p of historico)await syncPedido(p);
+  await syncConfig();
+  toast("Enviado para nuvem");
+}
+function syncStart(){
+  if(!window.fb)return;
+  if(!unsub){
+    unsub=window.fs.onSnapshot(window.fs.collection(window.db,"pedidos"),snap=>{
+      syncing=true;
+      let map=new Map(historico.map(p=>[p.id,p]));
+      snap.forEach(d=>map.set(d.id,d.data()));
+      historico=[...map.values()].sort((a,b)=>new Date(a.data)-new Date(b.data));
+      save();
+      syncing=false;
+      renderCozinha();renderCaixa();resumo();
+    });
+  }
+  
+  if(!unsubCustos){
+    unsubCustos=window.fs.onSnapshot(window.fs.collection(window.db,"custos"),snap=>{
+      syncing=true;
+      let map=new Map((custos||[]).map(c=>[c.id,c]));
+      snap.forEach(d=>map.set(d.id,d.data()));
+      custos=[...map.values()].sort((a,b)=>new Date(a.criadoEm||a.data)-new Date(b.criadoEm||b.data));
+      save();syncing=false;
+      if(document.getElementById("listaCustos"))renderCustos();
+      if(document.getElementById("finOut"))gerarFinanceiro();
+    });
+  }
+
+  if(!window.unsubConfig){
+    window.unsubConfig=window.fs.onSnapshot(window.fs.doc(window.db,"config","geral"),d=>{
+      if(!d.exists())return;
+      syncing=true;
+      let c=d.data();
+      if(c.produtos)produtos=c.produtos;
+      if(c.categorias)categorias=c.categorias;
+      if(c.senhas)senhas=c.senhas;
+      if(c.auto_print)localStorage.setItem("auto_print",c.auto_print);
+      if(c.dark)localStorage.setItem("dark",c.dark);
+      if(c.num)localStorage.setItem("num_bc",c.num);
+      save();
+      syncing=false;
+      dedup();
+      if(document.getElementById("produtos"))renderProdutos();
+      resumo();
+    });
+  }
+  toast("Nuvem conectada");
+}
+if(localStorage.getItem("dark")==="true")document.body.classList.add("dark");dedup();renderPedido();if(perfil)iniciar();
+
+/* ===================== BARRACA DA CRIS PRO 7.0 ENTERPRISE ===================== */
+let caixaMovs = JSON.parse(localStorage.getItem("caixa_movs_bc")||"[]");
+let estoque = JSON.parse(localStorage.getItem("estoque_bc")||"[]");
+let fichas = JSON.parse(localStorage.getItem("fichas_bc")||"[]");
+let auditoria = JSON.parse(localStorage.getItem("auditoria_bc")||"[]");
+let tefConfig = JSON.parse(localStorage.getItem("tef_config_bc")||'{"ativo":"nao","provedor":"Stone TEF","pinpad":"PPC930","modo":"homologacao"}');
+
+function savePro7(){
+  localStorage.setItem("caixa_movs_bc",JSON.stringify(caixaMovs));
+  localStorage.setItem("estoque_bc",JSON.stringify(estoque));
+  localStorage.setItem("fichas_bc",JSON.stringify(fichas));
+  localStorage.setItem("auditoria_bc",JSON.stringify(auditoria));
+  localStorage.setItem("tef_config_bc",JSON.stringify(tefConfig));
+}
+
+function logAcao(acao,detalhe){
+  const l={id:"log_"+Date.now(),data:new Date().toISOString(),perfil:perfil||"sem login",acao,detalhe:detalhe||""};
+  auditoria.push(l);
+  if(auditoria.length>1000)auditoria=auditoria.slice(-1000);
+  savePro7();
+}
+
+function caixaAberto(){
+  return caixaMovs.slice().reverse().find(c=>c.tipo==="abertura" && !caixaMovs.some(f=>f.tipo==="fechamento" && f.caixaId===c.id));
+}
+
+function admCaixaPro(){
+  const aberto=caixaAberto();
+  $("areaAdm").innerHTML=`<h3>Caixa PRO</h3>
+  <div class=card><b>Status:</b> ${aberto?"Aberto ✅":"Fechado ❌"}<br>${aberto?"Aberto em: "+new Date(aberto.data).toLocaleString("pt-BR")+"<br>Valor inicial: "+money(aberto.valor):"Abra o caixa para iniciar a operação."}</div>
+  <div class=grid>
+    <button class="btn verde" onclick="abrirCaixaPro()">Abrir caixa</button>
+    <button class="btn vermelho" onclick="fecharCaixaPro()">Fechar caixa</button>
+    <button class="btn laranja" onclick="sangriaPro()">Sangria</button>
+    <button class="btn azul" onclick="suprimentoPro()">Suprimento</button>
+  </div>
+  <div id=caixaResumo></div>
+  <h3>Movimentos</h3><div id=caixaMovs></div>`;
+  renderCaixaPro();
+}
+
+function renderCaixaPro(){
+  const aberto=caixaAberto();
+  const ini=aberto?aberto.data.slice(0,10):dataLocalISO();
+  const fim=dataLocalISO();
+  const vendas=(historico||[]).filter(p=>(p.data||"").slice(0,10)>=ini&&(p.data||"").slice(0,10)<=fim&&p.status==="entregue");
+  const totalVendas=vendas.reduce((s,p)=>s+Number(p.total||0),0);
+  const sangrias=caixaMovs.filter(m=>m.tipo==="sangria"&&(!aberto||m.caixaId===aberto.id)).reduce((s,m)=>s+Number(m.valor||0),0);
+  const suprimentos=caixaMovs.filter(m=>m.tipo==="suprimento"&&(!aberto||m.caixaId===aberto.id)).reduce((s,m)=>s+Number(m.valor||0),0);
+  const inicial=aberto?Number(aberto.valor||0):0;
+  const esperado=inicial+totalVendas+suprimentos-sangrias;
+  if($("caixaResumo"))$("caixaResumo").innerHTML=`<div class=card>
+    <b>Resumo do caixa</b><br>
+    Valor inicial: ${money(inicial)}<br>
+    Vendas entregues: ${money(totalVendas)}<br>
+    Suprimentos: ${money(suprimentos)}<br>
+    Sangrias: ${money(sangrias)}<br>
+    <b>Caixa esperado: ${money(esperado)}</b>
+  </div>`;
+  if($("caixaMovs"))$("caixaMovs").innerHTML=caixaMovs.slice().reverse().slice(0,80).map(m=>`<div class=card><b>${m.tipo}</b> • ${money(m.valor)}<br>${new Date(m.data).toLocaleString("pt-BR")}<br><small>${m.obs||""}</small></div>`).join("")||"Nenhum movimento.";
+}
+
+function abrirCaixaPro(){
+  if(caixaAberto())return alert("Já existe um caixa aberto.");
+  const valor=Number(prompt("Valor inicial do caixa:","0")||0);
+  const obs=prompt("Observação:","Abertura de caixa")||"";
+  const m={id:"cx_"+Date.now(),tipo:"abertura",valor,data:new Date().toISOString(),perfil:perfil||"",obs};
+  caixaMovs.push(m);savePro7();logAcao("abertura_caixa",money(valor));admCaixaPro();
+}
+
+function sangriaPro(){
+  const aberto=caixaAberto(); if(!aberto)return alert("Abra o caixa primeiro.");
+  const valor=Number(prompt("Valor da sangria:","0")||0); if(valor<=0)return;
+  const obs=prompt("Motivo da sangria:","Retirada do caixa")||"";
+  caixaMovs.push({id:"mov_"+Date.now(),caixaId:aberto.id,tipo:"sangria",valor,data:new Date().toISOString(),perfil:perfil||"",obs});
+  savePro7();logAcao("sangria",money(valor));renderCaixaPro();
+}
+
+function suprimentoPro(){
+  const aberto=caixaAberto(); if(!aberto)return alert("Abra o caixa primeiro.");
+  const valor=Number(prompt("Valor do suprimento:","0")||0); if(valor<=0)return;
+  const obs=prompt("Motivo do suprimento:","Entrada no caixa")||"";
+  caixaMovs.push({id:"mov_"+Date.now(),caixaId:aberto.id,tipo:"suprimento",valor,data:new Date().toISOString(),perfil:perfil||"",obs});
+  savePro7();logAcao("suprimento",money(valor));renderCaixaPro();
+}
+
+function fecharCaixaPro(){
+  const aberto=caixaAberto(); if(!aberto)return alert("Não existe caixa aberto.");
+  const conferido=Number(prompt("Valor contado no caixa:","0")||0);
+  const vendas=(historico||[]).filter(p=>(p.data||"").slice(0,10)>=aberto.data.slice(0,10)&&p.status==="entregue");
+  const totalVendas=vendas.reduce((s,p)=>s+Number(p.total||0),0);
+  const sangrias=caixaMovs.filter(m=>m.tipo==="sangria"&&m.caixaId===aberto.id).reduce((s,m)=>s+Number(m.valor||0),0);
+  const suprimentos=caixaMovs.filter(m=>m.tipo==="suprimento"&&m.caixaId===aberto.id).reduce((s,m)=>s+Number(m.valor||0),0);
+  const esperado=Number(aberto.valor||0)+totalVendas+suprimentos-sangrias;
+  const dif=conferido-esperado;
+  caixaMovs.push({id:"fec_"+Date.now(),caixaId:aberto.id,tipo:"fechamento",valor:conferido,esperado,diferenca:dif,data:new Date().toISOString(),perfil:perfil||"",obs:"Fechamento"});
+  savePro7();logAcao("fechamento_caixa","Esperado: "+money(esperado)+" | Conferido: "+money(conferido)+" | Diferença: "+money(dif));
+  alert("Caixa fechado. Diferença: "+money(dif));
+  admCaixaPro();
+}
+
+function admEstoque(){
+  $("areaAdm").innerHTML=`<h3>Estoque</h3>
+  <div class=card><h3>Cadastrar insumo</h3>
+    <input id=estNome placeholder="Nome do insumo. Ex: Peixe Serra">
+    <select id=estUn><option>un</option><option>kg</option><option>g</option><option>l</option><option>ml</option></select>
+    <input id=estQtd type=number step=0.001 placeholder="Quantidade atual">
+    <input id=estMin type=number step=0.001 placeholder="Estoque mínimo">
+    <input id=estCusto type=number step=0.01 placeholder="Custo unitário">
+    <button class="btn verde" onclick="addInsumo()">Salvar insumo</button>
+  </div>
+  <div class=card><h3>Ficha técnica</h3>
+    <select id=fichaProduto>${produtos.map(p=>`<option>${p.nome}</option>`).join("")}</select>
+    <select id=fichaInsumo>${estoque.map(e=>`<option value="${e.id}">${e.nome} (${e.un})</option>`).join("")}</select>
+    <input id=fichaQtd type=number step=0.001 placeholder="Qtd usada por 1 produto">
+    <button class="btn azul" onclick="addFicha()">Adicionar baixa automática</button>
+  </div>
+  <h3>Insumos</h3><div id=listaEstoque></div>
+  <h3>Fichas técnicas</h3><div id=listaFichas></div>`;
+  renderEstoque();
+}
+
+function addInsumo(){
+  const nome=$("estNome").value.trim(); if(!nome)return alert("Informe o nome.");
+  const e={id:"est_"+Date.now(),nome,un:$("estUn").value,qtd:Number($("estQtd").value||0),min:Number($("estMin").value||0),custo:Number($("estCusto").value||0),atualizado:new Date().toISOString()};
+  estoque.push(e);savePro7();logAcao("estoque_add",nome);admEstoque();
+}
+
+function entradaEstoque(id){
+  const e=estoque.find(x=>x.id===id); if(!e)return;
+  const q=Number(prompt("Quantidade de entrada em "+e.un+":","0")||0); if(q<=0)return;
+  e.qtd=Number(e.qtd||0)+q;e.atualizado=new Date().toISOString();savePro7();logAcao("estoque_entrada",e.nome+" +"+q+" "+e.un);renderEstoque();
+}
+
+function ajusteEstoque(id){
+  const e=estoque.find(x=>x.id===id); if(!e)return;
+  const q=Number(prompt("Nova quantidade em "+e.un+":",e.qtd)||0);
+  e.qtd=q;e.atualizado=new Date().toISOString();savePro7();logAcao("estoque_ajuste",e.nome+" = "+q+" "+e.un);renderEstoque();
+}
+
+function delInsumo(id){
+  if(!confirm("Excluir insumo?"))return;
+  estoque=estoque.filter(e=>e.id!==id);fichas=fichas.filter(f=>f.insumoId!==id);savePro7();logAcao("estoque_excluir",id);admEstoque();
+}
+
+function addFicha(){
+  const prod=$("fichaProduto").value,insumoId=$("fichaInsumo").value,qtd=Number($("fichaQtd").value||0);
+  if(!prod||!insumoId||qtd<=0)return alert("Preencha a ficha técnica.");
+  fichas.push({id:"ficha_"+Date.now(),produto:prod,insumoId,qtd});
+  savePro7();logAcao("ficha_add",prod);admEstoque();
+}
+
+function delFicha(id){fichas=fichas.filter(f=>f.id!==id);savePro7();admEstoque();}
+
+function renderEstoque(){
+  if($("listaEstoque"))$("listaEstoque").innerHTML=estoque.map(e=>{
+    const baixo=Number(e.qtd||0)<=Number(e.min||0);
+    return `<div class=card><b>${e.nome}</b> ${baixo?"⚠️":""}<br>Estoque: ${e.qtd} ${e.un}<br>Mínimo: ${e.min} ${e.un}<br>Custo unit.: ${money(e.custo)}<br>
+    <button class="btn verde" onclick="entradaEstoque('${e.id}')">Entrada</button>
+    <button class="btn laranja" onclick="ajusteEstoque('${e.id}')">Ajustar</button>
+    <button class="btn vermelho" onclick="delInsumo('${e.id}')">Excluir</button></div>`;
+  }).join("")||"Nenhum insumo cadastrado.";
+  if($("listaFichas"))$("listaFichas").innerHTML=fichas.map(f=>{
+    const e=estoque.find(x=>x.id===f.insumoId)||{};
+    return `<div class=card><b>${f.produto}</b><br>Baixa: ${f.qtd} ${e.un||""} de ${e.nome||"insumo"}<br><button class="btn vermelho" onclick="delFicha('${f.id}')">Excluir</button></div>`;
+  }).join("")||"Nenhuma ficha técnica cadastrada.";
+}
+
+function baixarEstoquePorPedido(p){
+  (p.itens||[]).forEach(item=>{
+    fichas.filter(f=>norm(f.produto)===norm(item.nome)).forEach(f=>{
+      const e=estoque.find(x=>x.id===f.insumoId);
+      if(e){ e.qtd=Number(e.qtd||0)-(Number(f.qtd||0)*Number(item.qtd||0)); e.atualizado=new Date().toISOString(); }
+    });
+  });
+  savePro7();
+}
+
+const statusOriginalPro7 = status;
+status = async function(id,st){
+  const antes=(historico.find(x=>x.id===id)||{}).status;
+  await statusOriginalPro7(id,st);
+  const p=historico.find(x=>x.id===id);
+  if(p && antes!=="entregue" && st==="entregue"){
+    baixarEstoquePorPedido(p);
+    logAcao("pedido_entregue_baixa_estoque","Pedido "+p.numero);
+  }
+};
+
+function admDashboardPro(){
+  const hoje=dataLocalISO();
+  const vendasHoje=(historico||[]).filter(p=>(p.data||"").slice(0,10)===hoje&&p.status!=="cancelado");
+  const entregues=vendasHoje.filter(p=>p.status==="entregue");
+  const faturamento=entregues.reduce((s,p)=>s+Number(p.total||0),0);
+  const custosHoje=(custos||[]).filter(c=>(c.data||"").slice(0,10)===hoje&&c.status!=="cancelado").reduce((s,c)=>s+Number(c.valor||0),0);
+  const ticket=entregues.length?faturamento/entregues.length:0;
+  const porPg={};entregues.forEach(p=>porPg[p.pagamento]=(porPg[p.pagamento]||0)+Number(p.total||0));
+  const baixos=estoque.filter(e=>Number(e.qtd||0)<=Number(e.min||0));
+  $("areaAdm").innerHTML=`<h3>Dashboard PRO</h3>
+  <div class=grid>
+    <div class=card><b>Faturamento hoje</b><br><h2>${money(faturamento)}</h2></div>
+    <div class=card><b>Lucro estimado</b><br><h2>${money(faturamento-custosHoje)}</h2></div>
+    <div class=card><b>Pedidos entregues</b><br><h2>${entregues.length}</h2></div>
+    <div class=card><b>Ticket médio</b><br><h2>${money(ticket)}</h2></div>
+  </div>
+  <h3>Pagamentos</h3><table class=tabela><tr><th>Forma</th><th>Total</th></tr>${Object.keys(porPg).map(k=>`<tr><td>${k}</td><td>${money(porPg[k])}</td></tr>`).join("")}</table>
+  <h3>Alertas de estoque</h3>${baixos.map(e=>`<div class=card>⚠️ ${e.nome}: ${e.qtd} ${e.un}</div>`).join("")||"<div class=card>Nenhum alerta.</div>"}`;
+}
+
+function admAuditoria(){
+  $("areaAdm").innerHTML=`<h3>Auditoria</h3>
+  <button class="btn laranja" onclick="baixarAuditoria()">Baixar auditoria CSV</button>
+  <div>${auditoria.slice().reverse().slice(0,150).map(l=>`<div class=card><b>${l.acao}</b><br>${new Date(l.data).toLocaleString("pt-BR")} • ${l.perfil}<br><small>${l.detalhe||""}</small></div>`).join("")||"Nenhum log."}</div>`;
+}
+
+function baixarAuditoria(){
+  let c="\ufeffData,Perfil,Ação,Detalhe\n";
+  auditoria.forEach(l=>c+=`"${l.data}","${l.perfil}","${l.acao}","${String(l.detalhe||"").replaceAll('"',"'")}"\n`);
+  baixar("auditoria_barraca_da_cris.csv",c,"text/csv");
+}
+
+function admTefReady(){
+  $("areaAdm").innerHTML=`<h3>TEF Ready</h3>
+  <div class=card><b>Status:</b> Estrutura preparada para integração futura.<br><small>Quando a Stone liberar SAK, pinpad e documentação, o botão de pagamento chamará o módulo TEF.</small></div>
+  <select id=tefAtivo><option value=nao>Desativado</option><option value=sim>Ativado em homologação</option></select>
+  <select id=tefPinpad><option>PPC930</option><option>IPP320</option><option>LANE3000</option><option>Q25</option><option>P200</option></select>
+  <input id=tefStoneCode placeholder="StoneCode" value="${tefConfig.stoneCode||""}">
+  <input id=tefSak placeholder="SAK / chave de integração" value="${tefConfig.sak||""}">
+  <button class="btn verde" onclick="salvarTefConfig()">Salvar configuração TEF</button>
+  <button class="btn azul" onclick="simularTef()">Simular pagamento TEF</button>`;
+  $("tefAtivo").value=tefConfig.ativo||"nao";
+  $("tefPinpad").value=tefConfig.pinpad||"PPC930";
+}
+
+function salvarTefConfig(){
+  tefConfig={ativo:$("tefAtivo").value,provedor:"Stone TEF",pinpad:$("tefPinpad").value,stoneCode:$("tefStoneCode").value,sak:$("tefSak").value,modo:"homologacao"};
+  savePro7();logAcao("tef_config","Pinpad "+tefConfig.pinpad);toast("TEF configurado");
+}
+
+function simularTef(){
+  const valor=Number(prompt("Valor para simular TEF:","10")||0);
+  if(valor<=0)return;
+  alert("Simulação TEF\\nEnviado: "+money(valor)+"\\nRetorno: APROVADO\\nNSU: SIM"+Date.now());
+  logAcao("tef_simulado",money(valor));
+}
+
+function processarPagamento(valor,tipo){
+  if(tipo && tipo.includes("Cartão") && tefConfig.ativo==="sim"){
+    return {status:"pendente_tef",mensagem:"TEF Stone será chamado nesta camada quando homologado.",valor};
+  }
+  return {status:"manual",mensagem:"Pagamento manual registrado.",valor};
+}
+
+const salvarPedidoOriginalPro7 = salvarPedido;
+salvarPedido = async function(){
+  const tipo=$("pagamento")?.value||"";
+  const valor=total();
+  const pg=processarPagamento(valor,tipo);
+  if(pg.status==="pendente_tef"){
+    const ok=confirm("TEF Ready: pagamento será simulado nesta versão. Confirmar aprovado?");
+    if(!ok)return;
+  }
+  await salvarPedidoOriginalPro7();
+  logAcao("pedido_salvo","Pagamento: "+tipo+" | "+money(valor));
+};
+
+/* Backup PRO 7 junto com backup JSON antigo */
+const backupOriginalPro7 = backup;
+backup = function(){
+  baixar("backup_pro7_enterprise.json",JSON.stringify({produtos,categorias,historico,custos,senhas,caixaMovs,estoque,fichas,auditoria,tefConfig,
+    num:localStorage.getItem("num_bc"),
+    auto_print:localStorage.getItem("auto_print"),
+    dark:localStorage.getItem("dark")
+  },null,2),"application/json");
+};
+
+const restaurarOriginalPro7 = restaurar;
+restaurar = function(e){
+  let f=e.target.files[0];
+  if(!f)return;
+  let r=new FileReader();
+  r.onload=()=>{
+    let b=JSON.parse(r.result);
+    produtos=b.produtos||produtos; categorias=b.categorias||categorias; historico=b.historico||historico;
+    custos=b.custos||custos; senhas=b.senhas||senhas; caixaMovs=b.caixaMovs||caixaMovs; estoque=b.estoque||estoque;
+    fichas=b.fichas||fichas; auditoria=b.auditoria||auditoria; tefConfig=b.tefConfig||tefConfig;
+    if(b.num)localStorage.setItem("num_bc",b.num);
+    if(b.auto_print)localStorage.setItem("auto_print",b.auto_print);
+    if(b.dark)localStorage.setItem("dark",b.dark);
+    save();savePro7();syncConfig();alert("Backup PRO 7 restaurado");
+  };
+  r.readAsText(f);
+};
+
+logAcao("sistema","PRO 7.0 Enterprise carregado");
+
+</script>
+</body>
+</html>
