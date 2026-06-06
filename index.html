@@ -2,10 +2,160 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Teste API</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Barraca da Cris</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 25px 15px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      font-size: 16px;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    h2 {
+      color: #2563eb;
+      margin-top: 25px;
+    }
+
+    p {
+      line-height: 1.5;
+    }
+
+    .produto {
+      border-bottom: 1px solid #ddd;
+      padding: 12px 0;
+    }
+
+    .produto:last-child {
+      border-bottom: none;
+    }
+
+    .produto strong {
+      font-size: 17px;
+    }
+
+    .contato {
+      background: #eef4ff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 25px;
+    }
+
+    a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>API funcionando!</h1>
-  <p>Projeto publicado na Vercel.</p>
+
+  <header>
+    <h1>Barraca da Cris</h1>
+    <p>Sistema de pedidos online</p>
+  </header>
+
+  <main>
+
+    <h2>Sobre a loja</h2>
+    <p>
+      A Barraca da Cris trabalha com vendas de alimentos, lanches, bebidas,
+      cafés, bolos e refeições rápidas para clientes finais.
+    </p>
+
+    <h2>Produtos e serviços</h2>
+
+    <div class="produto">
+      <strong>Cafés e bebidas</strong>
+      <p>Café, café com leite, água, refrigerantes e outras bebidas.</p>
+    </div>
+
+    <div class="produto">
+      <strong>Bolos e lanches</strong>
+      <p>Bolos caseiros, pães recheados, mistos e lanches rápidos.</p>
+    </div>
+
+    <div class="produto">
+      <strong>Pedidos online</strong>
+      <p>
+        O cliente pode realizar pedidos e efetuar pagamento via Pix,
+        cartão ou dinheiro.
+      </p>
+    </div>
+
+    <h2>Formas de pagamento</h2>
+    <p>
+      Aceitamos Pix, dinheiro e cartões. A integração com a Cielo será utilizada
+      para processar pagamentos online de forma segura.
+    </p>
+
+    <div class="contato">
+      <h2>Contato</h2>
+
+      <p><strong>Loja:</strong> Barraca da Cris</p>
+
+      <p><strong>Atendimento:</strong> pedidos presenciais e online</p>
+
+      <p>
+        <strong>WhatsApp:</strong>
+        <a href="https://wa.me/5588992054394" target="_blank">
+          (88) 99205-4394
+        </a>
+      </p>
+
+      <p>
+        <strong>E-mail:</strong>
+        <a href="mailto:isac.jeferson.9@gmail.com">
+          isac.jeferson.9@gmail.com
+        </a>
+      </p>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>Barraca da Cris - Todos os direitos reservados.</p>
+  </footer>
+
 </body>
 </html>
